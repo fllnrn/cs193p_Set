@@ -13,9 +13,9 @@ struct SetGame {
     
     init () {
         for number in 1...3 {
-            for shape in ["diamond","capsule","bolt.horizontal"] {
-                for shading in [Card.Shading.open, Card.Shading.stripped, Card.Shading.solid] {
-                    for color in ["red","green","purple"] {
+            for shape in Card.Shapes.allCases {
+                for shading in Card.Shading.allCases {
+                    for color in Card.Colors.allCases {
                         cards.append(Card(shape: shape, number: number, color: color, shading: shading))
                     }
                 }
@@ -28,17 +28,30 @@ struct SetGame {
     struct Card {
         
         var isFaceUp: Bool = true
+        var isMathced: Bool = false
+        var isSelected: Bool = false
         
-        let shape: String
+        let shape: Shapes
         let number: Int
-        let color: String
+        let color: Colors
         let shading: Shading
         
         
-        enum Shading {
+        enum Shading: CaseIterable {
             case open
             case stripped
             case solid
+        }
+        enum Shapes: CaseIterable {
+            case diamond
+            case squiggle
+            case oval
+        }
+        enum Colors: CaseIterable {
+            case red
+            case green
+            case purple
+            
         }
     }
 }
