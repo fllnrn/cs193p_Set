@@ -87,7 +87,6 @@ struct SetGameView: View {
             return .purple
         case .red:
             return .red
-        
         }
     }
     
@@ -95,16 +94,14 @@ struct SetGameView: View {
     static func getShape(for card: SetGame.Card) -> some View {
         switch card.shape {
         case .diamond:
-            Diamond()
+            Diamond().style(with: card.shading.rawValue)
         case .oval:
-            Capsule()
+            Capsule().style(with: card.shading.rawValue)
         case .squiggle:
-            ZStack {
-                Squiggle().stripped()
-                Squiggle().stroke()
-            }
+            Squiggle().style(with: card.shading.rawValue)
         }
     }
+    
 }
 
 

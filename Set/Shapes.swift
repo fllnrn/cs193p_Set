@@ -14,6 +14,7 @@ struct Diamond: Shape {
         path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
         path.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
         return path
     }
     
@@ -53,7 +54,24 @@ struct Stripes: Shape {
 }
     
 extension Shape {
-    public func stripped(spacing: CGFloat = 4.0) -> some View{
+    public func stripped(spacing: CGFloat = 4.0) -> some View {
         return Stripes(lineSpace: spacing).stroke().clipShape(self)
     }
+    
+    @ViewBuilder
+    public func style(with style: Int) -> some View {
+                switch style {
+                case 1:
+                    self.stroke()
+                case 2:
+                    ZStack {
+                        self.stripped()
+                        self.stroke()
+                    }
+                default:
+                    self.fill()
+                }
+    }
+    
+    
 }

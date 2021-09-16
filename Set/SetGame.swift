@@ -37,10 +37,10 @@ struct SetGame {
         let shading: Shading
         
         
-        enum Shading: CaseIterable {
-            case open
-            case stripped
-            case solid
+        enum Shading: Int, CaseIterable {
+            case open = 1
+            case stripped = 2
+            case solid = 3
         }
         enum Shapes: CaseIterable {
             case diamond
