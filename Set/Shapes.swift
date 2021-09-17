@@ -41,7 +41,7 @@ struct Stripes: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         var nextX: CGFloat = 0
-        for i in 0...(Int(rect.maxX / lineSpace)) {
+        for i in 0...(Int(rect.maxX / lineSpace) + 1) {
             path.move(to: CGPoint(x: nextX, y: 0))
             path.addLine(to: CGPoint(x: nextX, y: rect.maxY))
             nextX = CGFloat(i) * lineSpace
@@ -54,16 +54,16 @@ struct Stripes: Shape {
 }
     
 extension Shape {
-    public func stripped(spacing: CGFloat = 4.0) -> some View {
+    public func stripped(spacing: CGFloat = 5.0) -> some View {
         return Stripes(lineSpace: spacing).stroke().clipShape(self)
     }
     
     @ViewBuilder
     public func style(with style: Int) -> some View {
                 switch style {
-                case 1:
+                case 0:
                     self.stroke()
-                case 2:
+                case 1:
                     ZStack {
                         self.stripped()
                         self.stroke()

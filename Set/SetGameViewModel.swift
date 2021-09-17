@@ -19,10 +19,10 @@ class SetGameViewModel: ObservableObject {
     }
     
     var cardsOnTable: [Card] {
-        model.cards
+        model.cardsOnTable
     }
     var cardsInDeck: [Card] {
-        model.cards
+        model.cardsInDeck
     }
     
     var isTwoPlayers: Bool = false
@@ -33,7 +33,11 @@ class SetGameViewModel: ObservableObject {
         
     }
     
+    func choose(_ card: Card) {
+        model.choose(card)
+    }
+    
     func deal3Cards () {
-        
+        model.deal3Cards()
     }
 }

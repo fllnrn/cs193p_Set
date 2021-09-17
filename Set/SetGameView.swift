@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SetGameView: View {
     
-    
+    @ObservedObject
     var game: SetGameViewModel
     
     var body: some View {
@@ -19,8 +19,11 @@ struct SetGameView: View {
             }
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], content: {
-                    ForEach(0..<game.cardsOnTable.count) { index in
-                        Card(card: game.cardsOnTable[index]).aspectRatio(2/3, contentMode: .fill)
+                    ForEach(game.cardsOnTable) { card in
+                        Card(card: card).aspectRatio(2/3, contentMode: .fill)
+                            .onTapGesture {
+                                game.choose(card)
+                            }
                     }
                 })
             }
@@ -31,14 +34,24 @@ struct SetGameView: View {
     @ViewBuilder
     func gameControls() -> some View {
             HStack {
-                Button(action: {}, label: {
-                    Text("Сдаюсь")
-                })
+                Button {
+                    game.deal3Cards()
+                } label: {
+                    Image(systemName: "xmark.circle")
+                }
                 if (game.isTwoPlayers) {
                     Spacer()
-                    Button(action: {}, label: {
-                        Text("Сет")
-                    })
+                    Button {
+                        
+                    } label: {
+                        Text("Сет!")
+                    }
+                }
+                Spacer()
+                Button {
+                    
+                } label: {
+                        Image(systemName: "questionmark.circle")
                 }
             }.padding()
     }
@@ -57,7 +70,7 @@ struct SetGameView: View {
                         VStack {
                             Spacer()
                             ForEach(0..<card.number) {_ in
-                                getShape(for: card).aspectRatio(2, contentMode: .fit)
+                                getShape(for: card).aspectRatio(2, contentMode: .fit).frame(maxWidth: 55)
                                 }
                                 .foregroundColor(getColor(for: card))
                                 .font(.largeTitle)
