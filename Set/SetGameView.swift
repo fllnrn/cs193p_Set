@@ -13,7 +13,7 @@ struct SetGameView: View {
     var game: SetGameViewModel
     
     var body: some View {
-        VStack {
+        ZStack {
             VStack {
                 playerBar(playerIndex: 1).rotationEffect(Angle(degrees: 180))
                 ScrollView {
@@ -42,6 +42,16 @@ struct SetGameView: View {
                     }
                 }.padding(.horizontal)
                 playerBar(playerIndex: 0)
+            }
+            if game.isComplete {
+                VStack {
+                Text("What's all folks!!")
+                Button{game.createNewGame()} label: {Text("New game")}
+                }.padding()
+                    .background(ZStack {
+                        RoundedRectangle(cornerRadius: 40).foregroundColor(.green)
+                        RoundedRectangle(cornerRadius: 40).stroke().foregroundColor(.gray)
+                    })
             }
         }
     }

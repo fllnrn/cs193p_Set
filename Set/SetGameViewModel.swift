@@ -34,6 +34,10 @@ class SetGameViewModel: ObservableObject {
         model.hintedCards
     }
     
+    var isComplete: Bool {
+        model.isComplete
+    }
+    
     // MARK: Intents
     
     func createNewGame() {

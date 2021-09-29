@@ -12,7 +12,7 @@ struct SetGame {
     private(set) var cardsInDeck: [Card] = []
     private(set) var cardsOnTable: [Card] = []
     private(set) var hintedCards: [Card] = []
-    
+    private(set) var isComplete = true
     private var selectedCardIds = [Int]()
     
     private(set) var players: [Player] = []
@@ -88,23 +88,40 @@ struct SetGame {
     }
     
     mutating func selectHintCards() {
-        hintedCards.removeAll()
-        hintedCards.append(contentsOf: findHintCards())
-        if hintedCards.count != 0 {
+        let nextSolution = findNextSolution()
+        if nextSolution.count != 0 {
+            hintedCards.removeAll()
+            hintedCards.append(contentsOf: nextSolution)
             changeScore(-8)
+        } else if cardsInDeck.count == 0 {
+            isComplete = true
         }
     }
     
-    func findHintCards() -> [Card] {
-        for i in 0...(cardsOnTable.count-3) {
-            for j in i+1...(cardsOnTable.count-2) {
-                for k in j+1...(cardsOnTable.count-1) {
+    func findNextSolution() -> [Card] {
+        var i = 0
+        var j = 1
+        var k = 2
+        
+        if hintedCards.count > 0 {
+            i = cardsOnTable.firstIndex(where: {$0.id == hintedCards[0].id})!
+            j = cardsOnTable.firstIndex(where: {$0.id == hintedCards[1].id})!
+            k = cardsOnTable.firstIndex(where: {$0.id == hintedCards[2].id})! + 1
+        }
+        while i < cardsOnTable.count - 3 {
+            while j < cardsOnTable.count - 2 {
+                while k < cardsOnTable.count - 1 {
                     let cards = [cardsOnTable[i], cardsOnTable[j], cardsOnTable[k]]
                     if isSet(cards)  {
                         return cards
                     }
+                    k += 1
                 }
+                j += 1
+                k = j + 1
             }
+            i += 1
+            j = i + 1
         }
         return []
     }
