@@ -11,39 +11,84 @@ import SwiftUI
 struct SetGame {
     private(set) var cardsInDeck: [Card] = []
     private(set) var cardsOnTable: [Card] = []
+    private var selectedCardIds = [Int]()
     
-    mutating func deal3Cards() {
+    private(set) var players: [Player] = []
+    
+    
+    
+    mutating func clearSelection() {
+        for id in selectedCardIds {
+            if let selectedCardIndex = cardsOnTable.firstIndex(where: {card in card.id == id}) {
+                cardsOnTable[selectedCardIndex].isSelected = false
+            }
+        }
+        selectedCardIds = []
+    }
+    
+    mutating func deal3Cards(inPlaceOf replecementIds: [Int] = []) {
+            var replecementIds = replecementIds
             for _ in 0..<3 {
+                var newPlaceForCard = cardsOnTable.endIndex
+                if replecementIds.count != 0 {
+                    let cardToRemoveId = replecementIds.removeFirst()
+                    if let IndexOfCardToRemove = cardsOnTable.firstIndex(where: {card in card.id == cardToRemoveId}) {
+                        cardsOnTable.remove(at: IndexOfCardToRemove)
+                        newPlaceForCard = IndexOfCardToRemove
+                    }
+                }
                 if (cardsInDeck.count > 0) {
-                    cardsOnTable.append(cardsInDeck.removeFirst())
-                } else {
-                    break
+                    cardsOnTable.insert(cardsInDeck.removeFirst(), at: newPlaceForCard)
                 }
             }
     }
     
     mutating func choose(_ chosenCard: Card) {
-        let chosenIndex = cardsOnTable.firstIndex{ element in
-            chosenCard.id == element.id
-        }
-        if let chosenIndex = chosenIndex {
-            cardsOnTable[chosenIndex].isSelected.toggle()
-        }
-        let setCandidates = cardsOnTable.filter { element in
-            element.isSelected
-        }
-        if setCandidates.count == 3 {
-            if isSet(setCandidates) {
-                for item in setCandidates {
-                    if let cardIndex = cardsOnTable.firstIndex(where: { element in item.id == element.id }) {
-                        cardsOnTable.remove(at: cardIndex)
+            let chosenIndex = cardsOnTable.firstIndex{ element in
+                chosenCard.id == element.id
+            }
+            if let chosenIndex = chosenIndex {
+                
+                if selectedCardIds.count < 3 {
+                    if (cardsOnTable[chosenIndex].isSelected) {
+                            cardsOnTable[chosenIndex].isSelected = false
+                        if let indexToRemove = selectedCardIds.firstIndex(of: chosenCard.id) {
+                            selectedCardIds.remove(at: indexToRemove)
+                            }
+                    } else {
+                        cardsOnTable[chosenIndex].isSelected = true
+                        selectedCardIds.append(chosenCard.id)
+                    }
+                } else {
+                    if (cardsOnTable[chosenIndex].isSelected) {
+                        clearSelection()
+                    } else {
+                        clearSelection()
+                        selectedCardIds.append(chosenCard.id)
+                        cardsOnTable[chosenIndex].isSelected = true
                     }
                 }
-                deal3Cards()
             }
-        }
+
         
+            if selectedCardIds.count == 3 {
+                let setCandidates = cardsOnTable.filter { element in
+                    element.isSelected
+                }
+                if isSet(setCandidates) {
+                    changeScore(5)
+                    deal3Cards(inPlaceOf: selectedCardIds)
+                } else {
+                    changeScore(-2)
+                }
+            }
     }
+    
+    
+    func selectHintCards() -> [Card] {
+        return []
+    }
+    
     
     func isSet(_ cards: [Card]) -> Bool {
         let colorIsSet = ((cards[0].color == cards[1].color) && (cards[1].color == cards[2].color))
@@ -59,13 +104,37 @@ struct SetGame {
     }
     
     
-    init () {
+    mutating func changeScore(_ score: Int) {
+        if let activePlayerIndex = players.firstIndex(where: {$0.isCurrentPlayer}) {
+            players[activePlayerIndex].score += score
+        } else {
+            players[0].score += score
+        }
+    }
+    
+    mutating func switchPlayer(to player: Player) {
+        for i in players.indices {
+            players[i].isCurrentPlayer = false
+        }
+        if let index = players.firstIndex(where: {$0.id == player.id}) {
+            players[index].isCurrentPlayer = true
+        }
+    }
+    
+    init (singlePlayer: Bool = true) {
+        if singlePlayer {
+            players = [Player(isCurrentPlayer: true)]
+        } else {
+            players = [Player(isCurrentPlayer: true), Player(id: 1)]
+        }
         for number in 1...3 {
             for shape in Card.Shapes.allCases {
                 for shading in Card.Shading.allCases {
                     for color in Card.Colors.allCases {
-                        cardsInDeck.append(Card(id: number + 3*shape.rawValue + 9*shading.rawValue + 27*color.rawValue,
+                        let id = number + 3*shape.rawValue + 9*shading.rawValue + 27*color.rawValue
+                        cardsInDeck.append(Card(id: id,
                                         shape: shape, number: number, color: color, shading: shading))
+                        
                     }
                 }
             }
@@ -75,7 +144,6 @@ struct SetGame {
             deal3Cards()
         }
     }
-    
     
     struct Card: Identifiable {
         var id: Int
@@ -106,6 +174,14 @@ struct SetGame {
             case purple
             
         }
+    }
+    
+    struct Player: Identifiable {
+        var id: Int = 0
+        var isCurrentPlayer: Bool  = false
+        var name: String = ""
+        var score: Int = 0
+        
     }
 }
 

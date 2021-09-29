@@ -14,62 +14,72 @@ struct SetGameView: View {
     
     var body: some View {
         VStack {
-            if (game.isTwoPlayers) {
-                gameControls().rotationEffect(Angle(degrees: 180))
-            }
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], content: {
-                    ForEach(game.cardsOnTable) { card in
-                        Card(card: card).aspectRatio(2/3, contentMode: .fill)
-                            .onTapGesture {
-                                game.choose(card)
-                            }
+            VStack {
+                playerBar(playerIndex: 1).rotationEffect(Angle(degrees: 180))
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], content: {
+                        ForEach(game.cardsOnTable) { card in
+                            Card(card: card).aspectRatio(2/3, contentMode: .fill)
+                                .onTapGesture {game.choose(card)}
+                        }
+                    })
+                }.padding(.horizontal)
+                HStack {
+                    Button {game.deal3Cards()} label: {
+                        VStack {
+                            Image(systemName: "xmark.circle")
+                            Text("Deal more").font(.footnote)
+                        }
+                    }.disabled(game.cardsInDeck.count == 0)
+                    Spacer()
+                    Button{game.createNewGame()} label: {Text("New game")}
+                    Spacer()
+                    Button {} label: {
+                        VStack {
+                            Image(systemName: "questionmark.circle")
+                            Text("Hint").font(.footnote)
+                        }
                     }
-                })
+                }.padding(.horizontal)
+                playerBar(playerIndex: 0)
             }
-            gameControls()
         }
     }
     
     @ViewBuilder
-    func gameControls() -> some View {
-            HStack {
-                Button {
-                    game.deal3Cards()
-                } label: {
-                    Image(systemName: "xmark.circle")
-                }
-                if (game.isTwoPlayers) {
+    func playerBar(playerIndex: Int) -> some View {
+        if (game.players.count > 1) {
+                HStack {
+                    Text("score: \(game.players[playerIndex].score)")
                     Spacer()
-                    Button {
-                        
-                    } label: {
-                        Text("Сет!")
+                    Button {game.switchPlayer(to: game.players[playerIndex])} label: {Text("My turn!")}
+                    if game.players[playerIndex].isCurrentPlayer {
+                        Text("*")
                     }
                 }
-                Spacer()
-                Button {
-                    
-                } label: {
-                        Image(systemName: "questionmark.circle")
-                }
-            }.padding()
+        } else if playerIndex == 0 {
+            Text("score: \(game.players[0].score)")
+        }
     }
-    
+
     
     struct Card: View {
         var card: SetGame.Card
         
         var body: some View {
             ZStack {
-                let cardShape = RoundedRectangle(cornerRadius: 20)
+                let cardShape = RoundedRectangle(cornerRadius: 10)
                 ZStack {
                     if card.isFaceUp {
-                        cardShape.fill().foregroundColor(.white)
-                        cardShape.strokeBorder(lineWidth: 3)
+                        if card.isSelected {
+                            cardShape.fill().foregroundColor(.gray).opacity(0.8)
+                        } else {
+                            cardShape.fill().foregroundColor(.white)
+                        }
+                        cardShape.strokeBorder(lineWidth: 2)
                         VStack {
                             Spacer()
-                            ForEach(0..<card.number) {_ in
+                            ForEach(0..<card.number, id: \.self) {_ in
                                 getShape(for: card).aspectRatio(2, contentMode: .fit).frame(maxWidth: 55)
                                 }
                                 .foregroundColor(getColor(for: card))
@@ -80,11 +90,6 @@ struct SetGameView: View {
                         cardShape.opacity(0)
                     } else {
                         cardShape.fill()
-                    }
-                    if card.isSelected {
-                        cardShape
-                            .foregroundColor(.gray)
-                            .opacity(0.5)
                     }
                 }
             }

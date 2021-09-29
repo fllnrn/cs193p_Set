@@ -10,12 +10,13 @@ import SwiftUI
 
 class SetGameViewModel: ObservableObject {
     typealias Card = SetGame.Card
+    typealias Player = SetGame.Player
     
     @Published
     private var model: SetGame = createSetGame()
     
     static func createSetGame() -> SetGame {
-        SetGame()
+        SetGame(singlePlayer: false)
     }
     
     var cardsOnTable: [Card] {
@@ -25,12 +26,15 @@ class SetGameViewModel: ObservableObject {
         model.cardsInDeck
     }
     
-    var isTwoPlayers: Bool = false
+    var  players: [Player] {
+        model.players
+    }
     
     // MARK: Intents
     
     func createNewGame() {
-        
+        model = SetGameViewModel.createSetGame()
+        objectWillChange.send()
     }
     
     func choose(_ card: Card) {
@@ -40,4 +44,10 @@ class SetGameViewModel: ObservableObject {
     func deal3Cards () {
         model.deal3Cards()
     }
+    
+    func switchPlayer(to player: SetGame.Player) {
+        model.switchPlayer(to: player)
+    }
+    
+    
 }
