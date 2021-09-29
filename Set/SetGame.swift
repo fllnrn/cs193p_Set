@@ -11,6 +11,8 @@ import SwiftUI
 struct SetGame {
     private(set) var cardsInDeck: [Card] = []
     private(set) var cardsOnTable: [Card] = []
+    private(set) var hintedCards: [Card] = []
+    
     private var selectedCardIds = [Int]()
     
     private(set) var players: [Player] = []
@@ -77,6 +79,7 @@ struct SetGame {
                 }
                 if isSet(setCandidates) {
                     changeScore(5)
+                    hintedCards.removeAll()
                     deal3Cards(inPlaceOf: selectedCardIds)
                 } else {
                     changeScore(-2)
@@ -84,10 +87,29 @@ struct SetGame {
             }
     }
     
+    mutating func selectHintCards() {
+        hintedCards.removeAll()
+        hintedCards.append(contentsOf: findHintCards())
+        if hintedCards.count != 0 {
+            changeScore(-8)
+        }
+    }
     
-    func selectHintCards() -> [Card] {
+    func findHintCards() -> [Card] {
+        for i in 0...(cardsOnTable.count-3) {
+            for j in i+1...(cardsOnTable.count-2) {
+                for k in j+1...(cardsOnTable.count-1) {
+                    let cards = [cardsOnTable[i], cardsOnTable[j], cardsOnTable[k]]
+                    if isSet(cards)  {
+                        return cards
+                    }
+                }
+            }
+        }
         return []
     }
+    
+    
     
     
     func isSet(_ cards: [Card]) -> Bool {
@@ -113,6 +135,7 @@ struct SetGame {
     }
     
     mutating func switchPlayer(to player: Player) {
+        clearSelection()
         for i in players.indices {
             players[i].isCurrentPlayer = false
         }
@@ -149,7 +172,6 @@ struct SetGame {
         var id: Int
         
         var isFaceUp: Bool = true
-        var isMathced: Bool = false
         var isSelected: Bool = false
         
         let shape: Shapes

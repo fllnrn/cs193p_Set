@@ -19,7 +19,7 @@ struct SetGameView: View {
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], content: {
                         ForEach(game.cardsOnTable) { card in
-                            Card(card: card).aspectRatio(2/3, contentMode: .fill)
+                            Card(card: card, nextsolution: game.hints).aspectRatio(2/3, contentMode: .fill)
                                 .onTapGesture {game.choose(card)}
                         }
                     })
@@ -34,7 +34,7 @@ struct SetGameView: View {
                     Spacer()
                     Button{game.createNewGame()} label: {Text("New game")}
                     Spacer()
-                    Button {} label: {
+                    Button {game.getHint()} label: {
                         VStack {
                             Image(systemName: "questionmark.circle")
                             Text("Hint").font(.footnote)
@@ -50,12 +50,14 @@ struct SetGameView: View {
     func playerBar(playerIndex: Int) -> some View {
         if (game.players.count > 1) {
                 HStack {
+                    Spacer()
                     Text("score: \(game.players[playerIndex].score)")
                     Spacer()
                     Button {game.switchPlayer(to: game.players[playerIndex])} label: {Text("My turn!")}
                     if game.players[playerIndex].isCurrentPlayer {
                         Text("*")
                     }
+                    Spacer()
                 }
         } else if playerIndex == 0 {
             Text("score: \(game.players[0].score)")
@@ -65,35 +67,42 @@ struct SetGameView: View {
     
     struct Card: View {
         var card: SetGame.Card
+        var nextsolution: [SetGame.Card]
         
         var body: some View {
             ZStack {
                 let cardShape = RoundedRectangle(cornerRadius: 10)
+                
+                GeometryReader { geometry in
                 ZStack {
                     if card.isFaceUp {
-                        if card.isSelected {
-                            cardShape.fill().foregroundColor(.gray).opacity(0.8)
-                        } else {
-                            cardShape.fill().foregroundColor(.white)
-                        }
+                        cardShape.fill().foregroundColor(getForegroundColor())
                         cardShape.strokeBorder(lineWidth: 2)
                         VStack {
                             Spacer()
                             ForEach(0..<card.number, id: \.self) {_ in
-                                getShape(for: card).aspectRatio(2, contentMode: .fit).frame(maxWidth: 55)
+                                getShape(for: card).aspectRatio(2, contentMode: .fit).frame(maxWidth: min(geometry.size.width, geometry.size.height) * 0.8)
                                 }
                                 .foregroundColor(getColor(for: card))
                                 .font(.largeTitle)
                             Spacer()
                         }
-                    } else if card.isMathced {
-                        cardShape.opacity(0)
                     } else {
                         cardShape.fill()
                     }
                 }
+                }
             }
             .foregroundColor(.gray)
+        }
+        
+        func getForegroundColor() -> Color {
+            if card.isSelected {
+                return .gray
+            } else if nextsolution.contains(where: {$0.id == card.id}) {
+                return .yellow
+            }
+            return .white
         }
     }
     

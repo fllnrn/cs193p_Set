@@ -30,6 +30,10 @@ class SetGameViewModel: ObservableObject {
         model.players
     }
     
+    var hints: [SetGame.Card] {
+        model.hintedCards
+    }
+    
     // MARK: Intents
     
     func createNewGame() {
@@ -47,6 +51,10 @@ class SetGameViewModel: ObservableObject {
     
     func switchPlayer(to player: SetGame.Player) {
         model.switchPlayer(to: player)
+    }
+    
+    func getHint() {
+        model.selectHintCards()
     }
     
     
