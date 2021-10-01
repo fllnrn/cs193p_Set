@@ -16,14 +16,11 @@ struct SetGameView: View {
         ZStack {
             VStack {
                 playerBar(playerIndex: 1).rotationEffect(Angle(degrees: 180))
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], content: {
-                        ForEach(game.cardsOnTable) { card in
-                            Card(card: card, nextsolution: game.hints).aspectRatio(2/3, contentMode: .fill)
-                                .onTapGesture {game.choose(card)}
-                        }
-                    })
-                }.padding(.horizontal)
+                AspectVGrid(items: game.cardsOnTable, aspectRatio: 2/3) {card in
+                        Card(card: card, nextsolution: game.hints)
+                        .padding(2)
+                        .onTapGesture {game.choose(card)}
+                }
                 HStack {
                     Button {game.deal3Cards()} label: {
                         VStack {

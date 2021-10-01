@@ -12,7 +12,7 @@ struct SetGame {
     private(set) var cardsInDeck: [Card] = []
     private(set) var cardsOnTable: [Card] = []
     private(set) var hintedCards: [Card] = []
-    private(set) var isComplete = true
+    private(set) var isComplete = false
     private var selectedCardIds = [Int]()
     
     private(set) var players: [Player] = []
@@ -104,9 +104,9 @@ struct SetGame {
         var k = 2
         
         if hintedCards.count > 0 {
-            i = cardsOnTable.firstIndex(where: {$0.id == hintedCards[0].id})!
-            j = cardsOnTable.firstIndex(where: {$0.id == hintedCards[1].id})!
-            k = cardsOnTable.firstIndex(where: {$0.id == hintedCards[2].id})! + 1
+            i = cardsOnTable.firstIndex(where: {$0 == hintedCards[0]})!
+            j = cardsOnTable.firstIndex(where: {$0 == hintedCards[1]})!
+            k = cardsOnTable.firstIndex(where: {$0 == hintedCards[2]})! + 1
         }
         while i < cardsOnTable.count - 3 {
             while j < cardsOnTable.count - 2 {
@@ -185,7 +185,7 @@ struct SetGame {
         }
     }
     
-    struct Card: Identifiable {
+    struct Card: Identifiable, Equatable {
         var id: Int
         
         var isFaceUp: Bool = true
