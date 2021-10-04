@@ -11,6 +11,8 @@ import SwiftUI
 struct SetGame {
     private(set) var cardsInDeck: [Card] = []
     private(set) var cardsOnTable: [Card] = []
+    private(set) var cardsInDiscard: [Card] = []
+    
     private(set) var hintedCards: [Card] = []
     private(set) var isComplete = false
     private var selectedCardIds = [Int]()
@@ -28,21 +30,24 @@ struct SetGame {
         selectedCardIds = []
     }
     
-    mutating func deal3Cards(inPlaceOf replecementIds: [Int] = []) {
-            var replecementIds = replecementIds
-            for _ in 0..<3 {
-                var newPlaceForCard = cardsOnTable.endIndex
-                if replecementIds.count != 0 {
-                    let cardToRemoveId = replecementIds.removeFirst()
-                    if let IndexOfCardToRemove = cardsOnTable.firstIndex(where: {card in card.id == cardToRemoveId}) {
-                        cardsOnTable.remove(at: IndexOfCardToRemove)
-                        newPlaceForCard = IndexOfCardToRemove
-                    }
-                }
-                if (cardsInDeck.count > 0) {
-                    cardsOnTable.insert(cardsInDeck.removeFirst(), at: newPlaceForCard)
-                }
+    mutating func removeCards(forIds replecementIds: [Int] = []) {
+        for id in replecementIds {
+            if let index = cardsOnTable.firstIndex(where: {$0.id == id}) {
+                cardsOnTable[index].isSelected = false
             }
+        }
+        cardsInDiscard.append(contentsOf: cardsOnTable.filter {replecementIds.contains($0.id)})
+        cardsOnTable.removeAll(where: {replecementIds.contains($0.id)})
+    }
+    
+    mutating func deal3Cards() {
+        for _ in 0..<3 {
+            if (cardsInDeck.count > 0) {
+                var card = cardsInDeck.removeFirst()
+                card.isFaceUp = true
+                cardsOnTable.insert(card, at: cardsOnTable.endIndex)
+            }
+        }
     }
     
     mutating func choose(_ chosenCard: Card) {
@@ -80,7 +85,7 @@ struct SetGame {
                 if isSet(setCandidates) {
                     changeScore(5)
                     hintedCards.removeAll()
-                    deal3Cards(inPlaceOf: selectedCardIds)
+                    removeCards(forIds: selectedCardIds)
                 } else {
                     changeScore(-2)
                 }
@@ -188,7 +193,7 @@ struct SetGame {
     struct Card: Identifiable, Equatable {
         var id: Int
         
-        var isFaceUp: Bool = true
+        var isFaceUp: Bool = false
         var isSelected: Bool = false
         
         let shape: Shapes

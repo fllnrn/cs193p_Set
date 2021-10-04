@@ -12,43 +12,122 @@ struct SetGameView: View {
     @ObservedObject
     var game: SetGameViewModel
     
+    @State private var dealt: [SetGame.Card] = []
+
+    private func isUndelt(card: SetGame.Card) -> Bool {
+        return dealt.filter({$0.id == card.id}).count == 0
+    }
+    
+    
+    @Namespace private var cardsIdNamespace
+    
     var body: some View {
-        ZStack {
+        ZStack() {
             VStack {
                 playerBar(playerIndex: 1).rotationEffect(Angle(degrees: 180))
-                AspectVGrid(items: game.cardsOnTable, aspectRatio: 2/3) {card in
-                        Card(card: card, nextsolution: game.hints)
-                        .padding(2)
-                        .onTapGesture {game.choose(card)}
-                }
-                HStack {
-                    Button {game.deal3Cards()} label: {
-                        VStack {
-                            Image(systemName: "xmark.circle")
-                            Text("Deal more").font(.footnote)
-                        }
-                    }.disabled(game.cardsInDeck.count == 0)
-                    Spacer()
-                    Button{game.createNewGame()} label: {Text("New game")}
-                    Spacer()
-                    Button {game.getHint()} label: {
-                        VStack {
-                            Image(systemName: "questionmark.circle")
-                            Text("Hint").font(.footnote)
-                        }
-                    }
-                }.padding(.horizontal)
+                gamePole
+                menuBar
+                    .padding(.horizontal)
                 playerBar(playerIndex: 0)
             }
-            if game.isComplete {
+            completionLayer
+        }
+    }
+    
+    @ViewBuilder
+    var completionLayer: some View {
+        if game.isComplete {
+            VStack {
+            Text("What's all folks!!")
+            newGame
+            }.padding()
+                .background(ZStack {
+                    RoundedRectangle(cornerRadius: 40).foregroundColor(.green)
+                    RoundedRectangle(cornerRadius: 40).stroke().foregroundColor(.gray)
+                })
+        }
+    }
+    
+    var newGame: some View {
+        Button{
+            dealt = []
+            game.createNewGame()
+        } label: {Text("New game")}
+    }
+    
+    var menuBar: some View {
+        HStack {
+            deckView
+            discardPile
+            Spacer()
+            newGame
+            Spacer()
+            Button {game.getHint()} label: {
                 VStack {
-                Text("What's all folks!!")
-                Button{game.createNewGame()} label: {Text("New game")}
-                }.padding()
-                    .background(ZStack {
-                        RoundedRectangle(cornerRadius: 40).foregroundColor(.green)
-                        RoundedRectangle(cornerRadius: 40).stroke().foregroundColor(.gray)
-                    })
+                    Image(systemName: "questionmark.circle")
+                    Text("Hint").font(.footnote)
+                }
+            }
+        }
+    }
+    
+    var deckView: some View  {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill()
+                .foregroundColor(.white)
+                .aspectRatio(2/3, contentMode: .fit)
+            ForEach(game.cardsOnTable + game.cardsInDeck) { card in
+                if isUndelt(card: card) {
+                    Card(card: card, selectionColor: foregroundColor(for: card))
+                        .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+                }
+            }
+        }.onTapGesture {
+            withAnimation(Animation.easeInOut) {
+                if dealt.count != 0 {
+                    game.deal3Cards()
+                }
+                dealtFromDeckToDealt()
+            }
+        }
+    }
+    
+    
+    private func dealtFromDeckToDealt() {
+        for card in game.cardsOnTable {
+            withAnimation(.easeInOut) {
+                if !dealt.contains(card) {
+                    dealt.append(card)
+                }
+            }
+        }
+    }
+    
+    var discardPile: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill()
+                .foregroundColor(.white)
+                .aspectRatio(2/3, contentMode: .fit)
+            ForEach(game.cardsInDiscard) { card in
+                Card(card: card, selectionColor: foregroundColor(for: card))
+                    .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+            }
+        }
+    }
+    
+    var gamePole: some View {
+        AspectVGrid(items: game.cardsOnTable, aspectRatio: 2/3) {card in
+            if !isUndelt(card: card) {
+                Card(card: card, selectionColor: foregroundColor(for: card))
+                .padding(2)
+                .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+                .onTapGesture {
+                    withAnimation(Animation.easeInOut) {
+                    game.choose(card)
+                    }
+                }
             }
         }
     }
@@ -71,10 +150,18 @@ struct SetGameView: View {
         }
     }
 
+    func foregroundColor(for card: SetGame.Card) -> Color {
+        if card.isSelected {
+            return .gray
+        } else if game.hints.contains(where: {$0.id == card.id}) {
+            return .yellow
+        }
+        return .white
+    }
     
     struct Card: View {
         var card: SetGame.Card
-        var nextsolution: [SetGame.Card]
+        var selectionColor: Color
         
         var body: some View {
             ZStack {
@@ -83,33 +170,27 @@ struct SetGameView: View {
                 GeometryReader { geometry in
                 ZStack {
                     if card.isFaceUp {
-                        cardShape.fill().foregroundColor(getForegroundColor())
+                        cardShape.fill().foregroundColor(selectionColor)
                         cardShape.strokeBorder(lineWidth: 2)
                         VStack {
                             Spacer()
                             ForEach(0..<card.number, id: \.self) {_ in
-                                getShape(for: card).aspectRatio(2, contentMode: .fit).frame(maxWidth: min(geometry.size.width, geometry.size.height) * 0.8)
+                                getShape(for: card)
+                                    .aspectRatio(2, contentMode: .fit)
+                                    .frame(maxWidth: min(geometry.size.width, geometry.size.height) * 0.8)
                                 }
                                 .foregroundColor(getColor(for: card))
                                 .font(.largeTitle)
                             Spacer()
                         }
                     } else {
-                        cardShape.fill()
+                        cardShape.style(with: SetGame.Card.Shading.stripped.rawValue)
                     }
                 }
                 }
             }
+            .aspectRatio(2/3, contentMode: .fit)
             .foregroundColor(.gray)
-        }
-        
-        func getForegroundColor() -> Color {
-            if card.isSelected {
-                return .gray
-            } else if nextsolution.contains(where: {$0.id == card.id}) {
-                return .yellow
-            }
-            return .white
         }
     }
     

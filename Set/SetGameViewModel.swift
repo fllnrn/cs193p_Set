@@ -25,6 +25,9 @@ class SetGameViewModel: ObservableObject {
     var cardsInDeck: [Card] {
         model.cardsInDeck
     }
+    var cardsInDiscard: [Card] {
+        model.cardsInDiscard
+    }
     
     var  players: [Player] {
         model.players
