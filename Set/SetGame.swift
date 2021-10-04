@@ -25,27 +25,48 @@ struct SetGame {
         for id in selectedCardIds {
             if let selectedCardIndex = cardsOnTable.firstIndex(where: {card in card.id == id}) {
                 cardsOnTable[selectedCardIndex].isSelected = false
+                if cardsOnTable[selectedCardIndex].isMatched {
+                    discard(card: cardsOnTable[selectedCardIndex])
+                }
             }
         }
         selectedCardIds = []
     }
     
-    mutating func removeCards(forIds replecementIds: [Int] = []) {
+    mutating func discard(card: Card) {
+        if let discardedCardIndex = cardsOnTable.firstIndex(where: {$0.id == card.id}) {
+            cardsInDiscard.append(cardsOnTable[discardedCardIndex])
+            cardsOnTable.remove(at: discardedCardIndex)
+        }
+    }
+    
+    mutating func matchCards(forIds replecementIds: [Int] = []) {
         for id in replecementIds {
             if let index = cardsOnTable.firstIndex(where: {$0.id == id}) {
                 cardsOnTable[index].isSelected = false
+                cardsOnTable[index].isMatched = true
             }
         }
-        cardsInDiscard.append(contentsOf: cardsOnTable.filter {replecementIds.contains($0.id)})
-        cardsOnTable.removeAll(where: {replecementIds.contains($0.id)})
+//        cardsInDiscard.append(contentsOf: cardsOnTable.filter {replecementIds.contains($0.id)})
+//        cardsOnTable.removeAll(where: {replecementIds.contains($0.id)})
     }
     
     mutating func deal3Cards() {
-        for _ in 0..<3 {
+        for i in 0..<3 {
             if (cardsInDeck.count > 0) {
+                var pasteAtIndex = cardsOnTable.endIndex
+                if selectedCardIds.count > 0 {
+                    let selectesId = selectedCardIds[i]
+                    if let cardToRemove = cardsOnTable.first(where: {$0.id == selectesId}) {
+                        if cardToRemove.isMatched {
+                            pasteAtIndex = cardsOnTable.firstIndex(where: {$0.id == cardToRemove.id})!
+                            discard(card: cardToRemove)
+                        }
+                    }
+                }
                 var card = cardsInDeck.removeFirst()
                 card.isFaceUp = true
-                cardsOnTable.insert(card, at: cardsOnTable.endIndex)
+                cardsOnTable.insert(card, at: pasteAtIndex)
             }
         }
     }
@@ -70,9 +91,9 @@ struct SetGame {
                     if (cardsOnTable[chosenIndex].isSelected) {
                         clearSelection()
                     } else {
+                        cardsOnTable[chosenIndex].isSelected = true
                         clearSelection()
                         selectedCardIds.append(chosenCard.id)
-                        cardsOnTable[chosenIndex].isSelected = true
                     }
                 }
             }
@@ -85,7 +106,7 @@ struct SetGame {
                 if isSet(setCandidates) {
                     changeScore(5)
                     hintedCards.removeAll()
-                    removeCards(forIds: selectedCardIds)
+                    matchCards(forIds: selectedCardIds)
                 } else {
                     changeScore(-2)
                 }
@@ -195,6 +216,7 @@ struct SetGame {
         
         var isFaceUp: Bool = false
         var isSelected: Bool = false
+        var isMatched: Bool = false
         
         let shape: Shapes
         let number: Int
