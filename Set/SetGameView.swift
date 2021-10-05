@@ -70,17 +70,28 @@ struct SetGameView: View {
             }
         }
     }
+    private func zIndex(for card: SetGame.Card, in collection: [SetGame.Card]) -> Double {
+        return -Double(collection.firstIndex(where: {$0.id == card.id}) ?? 0)
+    }
     
     var deckView: some View  {
         ZStack {
-            RoundedRectangle(cornerRadius: 20)
+            Rectangle()
                 .fill()
                 .foregroundColor(.white)
                 .aspectRatio(2/3, contentMode: .fit)
+                .zIndex(-Double.infinity)
             ForEach(game.cardsOnTable + game.cardsInDeck) { card in
                 if isUndelt(card: card) {
-                    Card(card: card, selectionColor: foregroundColor(for: card))
-                        .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+                    Group {
+                        RoundedRectangle(cornerRadius: 10).fill().foregroundColor(.white)
+                        RoundedRectangle(cornerRadius: 10).style(with: SetGame.Card.Shading.stripped.rawValue)
+                    }
+                    .aspectRatio(2/3, contentMode: .fit)
+                    .foregroundColor(.gray)
+                    .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+                    .zIndex(zIndex(for: card, in: game.cardsOnTable + game.cardsInDeck))
+
                 }
             }
         }.onTapGesture {
@@ -95,9 +106,12 @@ struct SetGameView: View {
     
     
     private func dealtFromDeckToDealt() {
+        var cardDelay = 0.0
+        let delayMult = 0.3
         for card in game.cardsOnTable {
-            withAnimation(.easeInOut) {
+            withAnimation(.easeInOut(duration: 1).delay(cardDelay)) {
                 if !dealt.contains(card) {
+                    cardDelay += delayMult
                     dealt.append(card)
                 }
             }
@@ -110,9 +124,11 @@ struct SetGameView: View {
                 .fill()
                 .foregroundColor(.white)
                 .aspectRatio(2/3, contentMode: .fit)
+                .zIndex(-Double.infinity)
             ForEach(game.cardsInDiscard) { card in
                 Card(card: card, selectionColor: foregroundColor(for: card))
                     .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+                    .zIndex(zIndex(for: card, in: game.cardsInDiscard))
             }
         }
     }
@@ -124,6 +140,7 @@ struct SetGameView: View {
                 .padding(2)
                 .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
                 .scaleEffect((card.isMatched ?? false) ? 0.7 : 1)
+                .zIndex(zIndex(for: card, in: game.cardsOnTable))
                 .onTapGesture {
                     withAnimation(Animation.easeInOut) {
                     game.choose(card)

@@ -15,7 +15,9 @@ struct SetGame {
     
     private(set) var hintedCards: [Card] = []
     private(set) var isComplete = false
-    private var selectedCardIds = [Int]()
+    private var selectedCardIds:[Int] {
+        cardsOnTable.filter({$0.isSelected}).map({$0.id})
+    }
     
     private(set) var players: [Player] = []
     
@@ -35,7 +37,6 @@ struct SetGame {
                 }
             }
         }
-        selectedCardIds = []
     }
     
     mutating func discard(card: Card) {
@@ -48,7 +49,7 @@ struct SetGame {
     mutating func matchCards(forIds replecementIds: [Int] = []) {
         for id in replecementIds {
             if let index = cardsOnTable.firstIndex(where: {$0.id == id}) {
-                cardsOnTable[index].isSelected = false
+//                cardsOnTable[index].isSelected = false
                 cardsOnTable[index].isMatched = true
             }
         }
@@ -91,20 +92,17 @@ struct SetGame {
                 if selectedCardIds.count < 3 {
                     if (cardsOnTable[chosenIndex].isSelected) {
                             cardsOnTable[chosenIndex].isSelected = false
-                        if let indexToRemove = selectedCardIds.firstIndex(of: chosenCard.id) {
-                            selectedCardIds.remove(at: indexToRemove)
-                            }
                     } else {
                         cardsOnTable[chosenIndex].isSelected = true
-                        selectedCardIds.append(chosenCard.id)
                     }
                 } else {
                     if (cardsOnTable[chosenIndex].isSelected) {
                         clearSelection()
                     } else {
-                        cardsOnTable[chosenIndex].isSelected = true
                         clearSelection()
-                        selectedCardIds.append(chosenCard.id)
+                        if let selectedIndex = cardsOnTable.firstIndex(where: {$0.id == chosenCard.id}) {
+                            cardsOnTable[selectedIndex].isSelected = true
+                        }
                     }
                 }
             }
