@@ -39,23 +39,23 @@ struct SetGame {
         }
     }
     
-    mutating func discard(card: Card) {
+    private mutating func discard(card: Card) {
         if let discardedCardIndex = cardsOnTable.firstIndex(where: {$0.id == card.id}) {
+            cardsOnTable[discardedCardIndex].isSelected = false
             cardsInDiscard.append(cardsOnTable[discardedCardIndex])
             cardsOnTable.remove(at: discardedCardIndex)
         }
     }
     
-    mutating func matchCards(forIds replecementIds: [Int] = []) {
+    private mutating func matchCards(forIds replecementIds: [Int] = []) {
         for id in replecementIds {
             if let index = cardsOnTable.firstIndex(where: {$0.id == id}) {
-//                cardsOnTable[index].isSelected = false
                 cardsOnTable[index].isMatched = true
             }
         }
     }
     
-    mutating func falseMatch(forIds replecementIds: [Int] = []) {
+    private mutating func falseMatch(forIds replecementIds: [Int] = []) {
         for id in replecementIds {
             if let index = cardsOnTable.firstIndex(where: {$0.id == id}) {
                 cardsOnTable[index].isMatched = false
@@ -64,11 +64,10 @@ struct SetGame {
     }
     
     mutating func deal3Cards() {
-        for i in 0..<3 {
+        for _ in 0..<3 {
             if (cardsInDeck.count > 0) {
                 var pasteAtIndex = cardsOnTable.endIndex
-                if selectedCardIds.count > i {
-                    let selectesId = selectedCardIds[i]
+                if let selectesId = selectedCardIds.first {
                     if let cardToRemove = cardsOnTable.first(where: {$0.id == selectesId}) {
                         if cardToRemove.isMatched ?? false {
                             pasteAtIndex = cardsOnTable.firstIndex(where: {$0.id == cardToRemove.id})!
@@ -134,7 +133,7 @@ struct SetGame {
         }
     }
     
-    func findNextSolution() -> [Card] {
+    private func findNextSolution() -> [Card] {
         var i = 0
         var j = 1
         var k = 2
@@ -165,7 +164,7 @@ struct SetGame {
     
     
     
-    func isSet(_ cards: [Card]) -> Bool {
+    private func isSet(_ cards: [Card]) -> Bool {
         let colorIsSet = ((cards[0].color == cards[1].color) && (cards[1].color == cards[2].color))
             || ((cards[0].color != cards[1].color) && (cards[1].color != cards[2].color) && (cards[2].color != cards[0].color))
         let shapeIsSet = ((cards[0].shape == cards[1].shape) && (cards[1].shape == cards[2].shape))
@@ -179,7 +178,7 @@ struct SetGame {
     }
     
     
-    mutating func changeScore(_ score: Int) {
+    private mutating func changeScore(_ score: Int) {
         if let activePlayerIndex = players.firstIndex(where: {$0.isCurrentPlayer}) {
             players[activePlayerIndex].score += score
         } else {

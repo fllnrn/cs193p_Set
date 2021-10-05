@@ -76,9 +76,7 @@ struct SetGameView: View {
     
     var deckView: some View  {
         ZStack {
-            Rectangle()
-                .fill()
-                .foregroundColor(.white)
+            Rectangle().opacity(0)
                 .aspectRatio(2/3, contentMode: .fit)
                 .zIndex(-Double.infinity)
             ForEach(game.cardsOnTable + game.cardsInDeck) { card in
@@ -120,9 +118,7 @@ struct SetGameView: View {
     
     var discardPile: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill()
-                .foregroundColor(.white)
+            Rectangle().opacity(0)
                 .aspectRatio(2/3, contentMode: .fit)
                 .zIndex(-Double.infinity)
             ForEach(game.cardsInDiscard) { card in
