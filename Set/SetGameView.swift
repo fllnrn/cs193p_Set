@@ -123,6 +123,7 @@ struct SetGameView: View {
                 Card(card: card, selectionColor: foregroundColor(for: card))
                 .padding(2)
                 .matchedGeometryEffect(id: card.id, in: cardsIdNamespace)
+                .scaleEffect((card.isMatched ?? false) ? 0.7 : 1)
                 .onTapGesture {
                     withAnimation(Animation.easeInOut) {
                     game.choose(card)
@@ -152,6 +153,9 @@ struct SetGameView: View {
 
     func foregroundColor(for card: SetGame.Card) -> Color {
         if card.isSelected {
+            if card.isMatched == false {
+                return .red
+            }
             return .gray
         } else if game.hints.contains(where: {$0.id == card.id}) {
             return .yellow
